@@ -1,11 +1,11 @@
-// Package broker contains a simple generic message broker implementation for Go 1.18+.
+// Package broker provides a simple generic message broker implementation for Go 1.18+.
 package broker
 
 import (
 	"time"
 )
 
-// Client defines a client that is registered to the broker
+// Client defines a client that is registered to the broker and receives messages from it
 type Client[T any] chan T
 
 // void represents an empty struct that consumes no memory
