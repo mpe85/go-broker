@@ -1,3 +1,4 @@
+// Package broker contains a simple generic message broker implementation for Go 1.18+.
 package broker
 
 import (
@@ -12,67 +13,25 @@ type void struct{}
 
 // Broker broadcasts events to registered clients
 type Broker[T any] struct {
-	// stop is cool
-	stop chan void
-	// published message channel
-	messages chan T
-	// new clients
-	newClients chan Client[T]
-	// removed clients
+	stop           chan void
+	messages       chan T
+	newClients     chan Client[T]
 	removedClients chan Client[T]
-	// client registry
-	clients map[Client[T]]void
-	// send timeout
-	timeout time.Duration
+	clients        map[Client[T]]void
+	timeout        time.Duration
 }
 
-// defaultTimeout specifies the default timeout when the Broker tries to send a message to a Client
-const defaultTimeout = time.Second
-
-// defaultBufferSize specifies the default size of the message buffer
-const defaultBufferSize uint = 10
-
-// Builder builds a new Broker
+// Builder encapsulates the construction of a new broker
 type Builder[T any] struct {
 	timeout    time.Duration
 	bufferSize uint
 }
 
-// Timeout configures the broker timeout
-func (builder *Builder[T]) Timeout(timeout time.Duration) *Builder[T] {
-	builder.timeout = timeout
-	return builder
-}
+// defaultTimeout specifies the default timeout when the broker tries to send a message to a client
+const defaultTimeout = time.Second
 
-// BufferSize configures the message buffer size
-func (builder *Builder[T]) BufferSize(bufferSize uint) *Builder[T] {
-	builder.bufferSize = bufferSize
-	return builder
-}
-
-// Build builds a new Broker using the configuration of the Builder
-func (builder *Builder[T]) Build() *Broker[T] {
-	broker := &Broker[T]{
-		stop:           make(chan void),
-		messages:       make(chan T, builder.bufferSize),
-		newClients:     make(chan Client[T]),
-		removedClients: make(chan Client[T]),
-		clients:        make(map[Client[T]]void),
-		timeout:        builder.timeout,
-	}
-	go broker.run()
-	return broker
-}
-
-// NewBuilder constructs a new Builder
-func NewBuilder[T any]() *Builder[T] {
-	return &Builder[T]{defaultTimeout, defaultBufferSize}
-}
-
-// New constructs a new broker with default configuration
-func New[T any]() *Broker[T] {
-	return NewBuilder[T]().Build()
-}
+// defaultBufferSize specifies the default size of the message buffer
+const defaultBufferSize uint = 10
 
 // Publish publishes a new message to the broker
 func (broker *Broker[T]) Publish(message T) {
@@ -101,6 +60,7 @@ func (broker *Broker[T]) run() {
 	for {
 		select {
 		case <-broker.stop:
+			// close all leftover clients and break the broker loop
 			for client := range broker.clients {
 				close(client)
 			}
@@ -123,4 +83,40 @@ func (broker *Broker[T]) run() {
 			}
 		}
 	}
+}
+
+// NewBuilder constructs a new builder
+func NewBuilder[T any]() *Builder[T] {
+	return &Builder[T]{defaultTimeout, defaultBufferSize}
+}
+
+// New constructs a new broker with default configuration
+func New[T any]() *Broker[T] {
+	return NewBuilder[T]().Build()
+}
+
+// Timeout configures the broker timeout
+func (builder *Builder[T]) Timeout(timeout time.Duration) *Builder[T] {
+	builder.timeout = timeout
+	return builder
+}
+
+// BufferSize configures the message buffer size
+func (builder *Builder[T]) BufferSize(bufferSize uint) *Builder[T] {
+	builder.bufferSize = bufferSize
+	return builder
+}
+
+// Build builds a new broker using the configuration of the builder
+func (builder *Builder[T]) Build() *Broker[T] {
+	broker := &Broker[T]{
+		stop:           make(chan void),
+		messages:       make(chan T, builder.bufferSize),
+		newClients:     make(chan Client[T]),
+		removedClients: make(chan Client[T]),
+		clients:        make(map[Client[T]]void),
+		timeout:        builder.timeout,
+	}
+	go broker.run()
+	return broker
 }
