@@ -1,6 +1,7 @@
 package broker
 
 import (
+	"github.com/stretchr/testify/assert"
 	"go.uber.org/goleak"
 	"testing"
 	"time"
@@ -10,17 +11,87 @@ func TestMain(m *testing.M) {
 	goleak.VerifyTestMain(m)
 }
 
-func Test(t *testing.T) {
-	msg := 4711
-	b := NewBuilder[int]().Timeout(10 * time.Millisecond).BufferSize(5).Build()
-	c := b.Subscribe()
-	go b.Publish(msg)
+func TestNew(t *testing.T) {
+	assertions := assert.New(t)
 
-	if <-c != msg {
-		t.Fatal("Received wrong value")
+	broker := New[int]()
+	assertions.NotNil(broker)
+	assertions.Equal(defaultTimeout, broker.timeout)
+	assertions.Equal(defaultBufferSize, cap(broker.messages))
+
+	t.Cleanup(func() {
+		broker.Close()
+	})
+}
+
+func TestNewBuilder(t *testing.T) {
+	assertions := assert.New(t)
+
+	broker := NewBuilder[int]().Build()
+	assertions.NotNil(broker)
+	assertions.Equal(defaultTimeout, broker.timeout)
+	assertions.Equal(defaultBufferSize, cap(broker.messages))
+
+	t.Cleanup(func() {
+		broker.Close()
+	})
+}
+
+func TestNewBuilderTimeout(t *testing.T) {
+	assertions := assert.New(t)
+
+	timeout := time.Millisecond
+
+	broker := NewBuilder[int]().Timeout(timeout).Build()
+	assertions.NotNil(broker)
+	assertions.Equal(timeout, broker.timeout)
+	assertions.Equal(defaultBufferSize, cap(broker.messages))
+
+	t.Cleanup(func() {
+		broker.Close()
+	})
+}
+
+func TestNewBuilderBufferSize(t *testing.T) {
+	assertions := assert.New(t)
+
+	bufferSize := 100
+
+	broker := NewBuilder[int]().BufferSize(bufferSize).Build()
+	assertions.NotNil(broker)
+	assertions.Equal(defaultTimeout, broker.timeout)
+	assertions.Equal(bufferSize, cap(broker.messages))
+
+	t.Cleanup(func() {
+		broker.Close()
+	})
+}
+
+func BenchmarkPublish(b *testing.B) {
+	broker := New[int]()
+	for i := 0; i < b.N; i++ {
+		broker.Publish(i)
 	}
 
-	b.Close()
+	b.Cleanup(func() {
+		broker.Close()
+	})
+}
+
+func TestSubscribe(t *testing.T) {
+	assertions := assert.New(t)
+	msg := 4711
+	broker := New[int]()
+	assertions.NotNil(broker)
+	client := broker.Subscribe()
+	assertions.NotNil(client)
+	go broker.Publish(msg)
+
+	assertions.Equal(msg, <-client)
+
+	t.Cleanup(func() {
+		broker.Close()
+	})
 }
 
 func ExampleNewBuilder() {

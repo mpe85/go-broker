@@ -24,14 +24,14 @@ type Broker[T any] struct {
 // Builder encapsulates the construction of a new broker
 type Builder[T any] struct {
 	timeout    time.Duration
-	bufferSize uint
+	bufferSize int
 }
 
 // defaultTimeout specifies the default timeout when the broker tries to send a message to a client
 const defaultTimeout = time.Second
 
 // defaultBufferSize specifies the default size of the message buffer
-const defaultBufferSize uint = 10
+const defaultBufferSize int = 10
 
 // Publish publishes a new message to the broker
 func (broker *Broker[T]) Publish(message T) {
@@ -102,7 +102,7 @@ func (builder *Builder[T]) Timeout(timeout time.Duration) *Builder[T] {
 }
 
 // BufferSize configures the message buffer size
-func (builder *Builder[T]) BufferSize(bufferSize uint) *Builder[T] {
+func (builder *Builder[T]) BufferSize(bufferSize int) *Builder[T] {
 	builder.bufferSize = bufferSize
 	return builder
 }
