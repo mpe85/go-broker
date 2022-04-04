@@ -81,13 +81,41 @@ func BenchmarkPublish(b *testing.B) {
 func TestSubscribe(t *testing.T) {
 	assertions := assert.New(t)
 	msg := 4711
+
 	broker := New[int]()
 	assertions.NotNil(broker)
+
 	client := broker.Subscribe()
 	assertions.NotNil(client)
+
 	go broker.Publish(msg)
 
-	assertions.Equal(msg, <-client)
+	m, ok := <-client
+	assertions.Equal(msg, m)
+	assertions.True(ok)
+
+	t.Cleanup(func() {
+		broker.Close()
+	})
+}
+
+func TestUnsubscribe(t *testing.T) {
+	assertions := assert.New(t)
+	msg := 4711
+
+	broker := New[int]()
+	assertions.NotNil(broker)
+
+	client := broker.Subscribe()
+	assertions.NotNil(client)
+
+	broker.Unsubscribe(client)
+
+	go broker.Publish(msg)
+
+	m, ok := <-client
+	assertions.Equal(0, m)
+	assertions.False(ok)
 
 	t.Cleanup(func() {
 		broker.Close()
