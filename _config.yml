@@ -1,0 +1,4 @@
+title: go-broker
+description: A generic broker for Go 1.18+
+show_downloads: true
+theme: jekyll-theme-slate
