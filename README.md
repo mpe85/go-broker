@@ -4,7 +4,7 @@
 [![Go](https://img.shields.io/github/go-mod/go-version/mpe85/go-broker)](https://go.dev/)
 [![Go Report Card](https://goreportcard.com/badge/github.com/mpe85/go-broker?style=flat-square)](https://goreportcard.com/report/github.com/mpe85/go-broker)
 [![Build](https://github.com/mpe85/go-broker/actions/workflows/test.yml/badge.svg)](https://github.com/mpe85/go-broker/actions/workflows/test.yml)
-[![Coverage](https://codecov.io/gh/mpe85/go-broker/branch/master/graph/badge.svg)](https://codecov.io/gh/mpe85/go-broker)
+[![codecov](https://codecov.io/gh/mpe85/go-broker/branch/master/graph/badge.svg?token=rWTO2Fk2jc)](https://codecov.io/gh/mpe85/go-broker)
 [![License](https://img.shields.io/github/license/mpe85/grampa.svg?label=License)](https://github.com/mpe85/go-broker/blob/master/LICENSE)
 [![PkgGoDev](https://pkg.go.dev/badge/mod/github.com/mpe85/go-broker)](https://pkg.go.dev/mod/github.com/mpe85/go-broker)
 
