@@ -24,7 +24,7 @@ func TestNew(t *testing.T) {
 	})
 }
 
-func TestNewBuilder(t *testing.T) {
+func TestNewBuilderDefault(t *testing.T) {
 	assertions := assert.New(t)
 
 	broker := NewBuilder[int]().Build()
@@ -67,20 +67,9 @@ func TestNewBuilderBufferSize(t *testing.T) {
 	})
 }
 
-func BenchmarkPublish(b *testing.B) {
-	broker := New[int]()
-	for i := 0; i < b.N; i++ {
-		broker.Publish(i)
-	}
-
-	b.Cleanup(func() {
-		broker.Close()
-	})
-}
-
 func TestSubscribe(t *testing.T) {
 	assertions := assert.New(t)
-	msg := 4711
+	answer := 42
 
 	broker := New[int]()
 	assertions.NotNil(broker)
@@ -88,10 +77,10 @@ func TestSubscribe(t *testing.T) {
 	client := broker.Subscribe()
 	assertions.NotNil(client)
 
-	go broker.Publish(msg)
+	go broker.Publish(answer)
 
-	m, ok := <-client
-	assertions.Equal(msg, m)
+	msg, ok := <-client
+	assertions.Equal(answer, msg)
 	assertions.True(ok)
 
 	t.Cleanup(func() {
@@ -101,7 +90,7 @@ func TestSubscribe(t *testing.T) {
 
 func TestUnsubscribe(t *testing.T) {
 	assertions := assert.New(t)
-	msg := 4711
+	answer := 42
 
 	broker := New[int]()
 	assertions.NotNil(broker)
@@ -111,10 +100,10 @@ func TestUnsubscribe(t *testing.T) {
 
 	broker.Unsubscribe(client)
 
-	go broker.Publish(msg)
+	go broker.Publish(answer)
 
-	m, ok := <-client
-	assertions.Equal(0, m)
+	msg, ok := <-client
+	assertions.Equal(0, msg)
 	assertions.False(ok)
 
 	t.Cleanup(func() {
@@ -122,6 +111,82 @@ func TestUnsubscribe(t *testing.T) {
 	})
 }
 
+func TestClose(t *testing.T) {
+	assertions := assert.New(t)
+	answer := 42
+
+	broker := New[int]()
+	assertions.NotNil(broker)
+
+	client := broker.Subscribe()
+	assertions.NotNil(client)
+
+	broker.Close()
+
+	go broker.Publish(answer)
+
+	msg, ok := <-client
+	assertions.Equal(0, msg)
+	assertions.False(ok)
+}
+
+func TestPublishTimeout(t *testing.T) {
+	assertions := assert.New(t)
+	answer := 42
+
+	broker := New[int]()
+	assertions.NotNil(broker)
+
+	client := broker.Subscribe()
+	assertions.NotNil(client)
+
+	go broker.Publish(answer)
+
+	time.Sleep(broker.timeout + 100*time.Millisecond)
+
+	select {
+	case <-client:
+		assertions.Fail("Received message not expected")
+	case <-time.After(time.Second):
+	}
+
+	t.Cleanup(func() {
+		broker.Close()
+	})
+}
+
+func BenchmarkNew(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		broker := New[int]()
+
+		b.Cleanup(func() {
+			broker.Close()
+		})
+	}
+}
+
+func BenchmarkPublish(b *testing.B) {
+	broker := New[int]()
+	for i := 0; i < b.N; i++ {
+		go broker.Publish(i)
+	}
+
+	b.Cleanup(func() {
+		broker.Close()
+	})
+}
+
+func BenchmarkSubscribe(b *testing.B) {
+	broker := New[int]()
+	for i := 0; i < b.N; i++ {
+		broker.Subscribe()
+	}
+
+	b.Cleanup(func() {
+		broker.Close()
+	})
+}
+
 func ExampleNewBuilder() {
-	NewBuilder[string]().Timeout(10 * time.Millisecond).BufferSize(100).Build()
+	NewBuilder[string]().Timeout(100 * time.Millisecond).BufferSize(50).Build()
 }
