@@ -48,7 +48,7 @@ Receive single message from the broker:
 message := <-client
 ```
 
-Receive single message from the broker, with check if channel is closed:
+Receive single message from the broker, with check if client is closed:
 ```go
 message, ok := <-client
 ```
