@@ -90,7 +90,9 @@ func NewBuilder[T any]() *Builder[T] {
 	return &Builder[T]{defaultTimeout, defaultBufferSize}
 }
 
-// New constructs a new broker with default configuration
+// New constructs a new broker with default configuration:
+// - timeout = 1 * time.Second
+// - bufferSize = 10
 func New[T any]() *Broker[T] {
 	return NewBuilder[T]().Build()
 }

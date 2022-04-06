@@ -16,6 +16,54 @@ A generic thread-safe broker for Go 1.18+.
 go get github.com/mpe85/go-broker
 ```
 
+## Usage
+
+Build a new broker with default configuration:
+```go
+theBroker := broker.New[string]()
+```
+
+Build a new broker with custom configuration:
+```go
+theBroker := broker.NewBuilder[string]().Timeout(3 * time.Second).BufferSize(100).Build()
+```
+
+Subscribe to the broker:
+```go
+client := theBroker.Subscribe()
+```
+
+Unsubscribe from the broker:
+```go
+theBroker.Unsubscribe(client)
+```
+
+Publish message to the broker:
+```go
+theBroker.Publish("Hello")
+```
+
+Receive single message from the broker:
+```go
+message := <-client
+```
+
+Receive single message from the broker, with check if channel is closed:
+```go
+message, ok := <-client
+```
+
+Iterate over all messages from the broker, until client is closed:
+```go
+for msg := range client {
+}
+```
+
+Shutdown the broker, and close all clients that are still subscribed:
+```go
+theBroker.Close()
+```
+
 ## Example
 
 ```go
@@ -23,8 +71,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/mpe85/go-broker"
 	"time"
+
+	"github.com/mpe85/go-broker"
 )
 
 func main() {
