@@ -25,10 +25,10 @@ theBroker := broker.New[string]()
 
 Build a new broker with custom configuration:
 ```go
-theBroker := broker.NewBuilder[string]()
-	.Timeout(3 * time.Second)
-	.BufferSize(100)
-	.Build()
+theBroker := broker.NewBuilder[string]().
+	Timeout(3 * time.Second).
+	BufferSize(100).
+	Build()
 ```
 
 Subscribe to the broker:
