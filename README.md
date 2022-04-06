@@ -25,7 +25,10 @@ theBroker := broker.New[string]()
 
 Build a new broker with custom configuration:
 ```go
-theBroker := broker.NewBuilder[string]().Timeout(3 * time.Second).BufferSize(100).Build()
+theBroker := broker.NewBuilder[string]()
+	.Timeout(3 * time.Second)
+	.BufferSize(100)
+	.Build()
 ```
 
 Subscribe to the broker:
@@ -38,24 +41,25 @@ Unsubscribe from the broker:
 theBroker.Unsubscribe(client)
 ```
 
-Publish message to the broker:
+Publish a message to the broker:
 ```go
 theBroker.Publish("Hello")
 ```
 
-Receive single message from the broker:
+Receive a single message from the broker:
 ```go
 message := <-client
 ```
 
-Receive single message from the broker, with check if client is closed:
+Receive a single message from the broker, with check if client is closed):
 ```go
 message, ok := <-client
 ```
 
-Iterate over all messages from the broker, until client is closed:
+Iterate over all messages from the broker, until client is closed):
 ```go
-for msg := range client {
+for message := range client {
+	// process message
 }
 ```
 
