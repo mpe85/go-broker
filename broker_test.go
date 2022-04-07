@@ -1,14 +1,21 @@
 package broker
 
 import (
-	"github.com/stretchr/testify/assert"
-	"go.uber.org/goleak"
+	"fmt"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"go.uber.org/goleak"
 )
 
 func TestMain(m *testing.M) {
 	goleak.VerifyTestMain(m)
+}
+
+func TestFoo(t *testing.T) {
+	x := make(map[string]int)
+	fmt.Println(x["test"])
 }
 
 func TestNew(t *testing.T) {
@@ -79,7 +86,7 @@ func TestSubscribe(t *testing.T) {
 
 	go broker.Publish(answer)
 
-	msg, ok := <-client
+	msg, ok := <-client.Channel()
 	assertions.Equal(answer, msg)
 	assertions.True(ok)
 
@@ -99,10 +106,13 @@ func TestUnsubscribe(t *testing.T) {
 	assertions.NotNil(client)
 
 	broker.Unsubscribe(client)
+	assertions.NotPanics(func() {
+		broker.Unsubscribe(client)
+	})
 
 	go broker.Publish(answer)
 
-	msg, ok := <-client
+	msg, ok := <-client.Channel()
 	assertions.Equal(0, msg)
 	assertions.False(ok)
 
@@ -122,10 +132,11 @@ func TestClose(t *testing.T) {
 	assertions.NotNil(client)
 
 	broker.Close()
+	assertions.NotPanics(broker.Close)
 
 	go broker.Publish(answer)
 
-	msg, ok := <-client
+	msg, ok := <-client.Channel()
 	assertions.Equal(0, msg)
 	assertions.False(ok)
 }
@@ -145,7 +156,7 @@ func TestPublishTimeout(t *testing.T) {
 	time.Sleep(broker.timeout + 100*time.Millisecond)
 
 	select {
-	case <-client:
+	case <-client.Channel():
 		assertions.Fail("Received message not expected")
 	case <-time.After(time.Second):
 	}

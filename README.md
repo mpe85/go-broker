@@ -48,17 +48,17 @@ theBroker.Publish("Hello")
 
 Receive a single message from the broker:
 ```go
-message := <-client
+message := <-client.Channel()
 ```
 
-Receive a single message from the broker, with check if client is closed):
+Receive a single message from the broker, with check if client is closed:
 ```go
-message, ok := <-client
+message, ok := <-client.Channel()
 ```
 
-Iterate over all messages from the broker, until client is closed):
+Iterate over all messages from the broker, until client is closed:
 ```go
-for message := range client {
+for message := range client.Channel() {
 	// process message
 }
 ```
@@ -93,7 +93,7 @@ func main() {
 
 	go theBroker.Publish(42)
 
-	fmt.Println(<-client1)
-	fmt.Println(<-client2)
+	fmt.Println(<-client1.Channel())
+	fmt.Println(<-client2.Channel())
 }
 ```
