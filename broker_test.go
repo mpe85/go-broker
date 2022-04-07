@@ -1,7 +1,6 @@
 package broker
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -11,11 +10,6 @@ import (
 
 func TestMain(m *testing.M) {
 	goleak.VerifyTestMain(m)
-}
-
-func TestFoo(t *testing.T) {
-	x := make(map[string]int)
-	fmt.Println(x["test"])
 }
 
 func TestNew(t *testing.T) {
