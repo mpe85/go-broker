@@ -33,39 +33,39 @@ theBroker := broker.NewBuilder[string]().
 
 Subscribe to the broker:
 ```go
-client := theBroker.Subscribe()
+client, err := theBroker.Subscribe()
 ```
 
 Unsubscribe from the broker:
 ```go
-theBroker.Unsubscribe(client)
+err := theBroker.Unsubscribe(client)
 ```
 
 Publish a message to the broker:
 ```go
-theBroker.Publish("Hello")
+err := theBroker.Publish("Hello")
 ```
 
 Receive a single message from the broker:
 ```go
-message := <-client.Channel()
+message := <-client.Messages()
 ```
 
 Receive a single message from the broker, with check if client is closed:
 ```go
-message, ok := <-client.Channel()
+message, ok := <-client.Messages()
 ```
 
 Iterate over all messages from the broker, until client is closed:
 ```go
-for message := range client.Channel() {
+for message := range client.Messages() {
 	// process message
 }
 ```
 
 Shutdown the broker, and close all clients that are still subscribed:
 ```go
-theBroker.Close()
+err := theBroker.Close()
 ```
 
 ## Example
@@ -86,14 +86,18 @@ func main() {
 		BufferSize(50).
 		Build()
 
-	defer theBroker.Close()
+	defer func() {
+		_ = theBroker.Close()
+    }()
 
-	client1 := theBroker.Subscribe()
-	client2 := theBroker.Subscribe()
+	client1, _ := theBroker.Subscribe()
+	client2, _ := theBroker.Subscribe()
 
-	go theBroker.Publish(42)
-
-	fmt.Println(<-client1.Channel())
-	fmt.Println(<-client2.Channel())
+	go func() {
+		_ = theBroker.Publish(42)
+    }()
+	
+	fmt.Println(<-client1.Messages())
+	fmt.Println(<-client2.Messages())
 }
 ```
