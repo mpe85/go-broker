@@ -93,7 +93,7 @@ func main() {
 
 	go func() {
 		_ = theBroker.Publish(42)
-    }()
+	}()
 	
 	fmt.Println(<-client1)
 	fmt.Println(<-client2)
