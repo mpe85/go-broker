@@ -7,21 +7,22 @@ import (
 )
 
 // Client defines a client that is registered to the broker and receives messages from it.
-type Client[T any] struct {
-	ch chan T
-}
+type Client[T any] chan T
+
+// ErrTimeout is the error returned when a broker operation timed out.
+var ErrTimeout = errors.New("timeout")
 
 // void represents an empty struct that consumes no memory.
 type void struct{}
 
 // Broker broadcasts messages to registered clients
 type Broker[T any] struct {
-	clients        map[chan T]void
-	stop           chan void
-	newClients     chan chan T
-	removedClients chan chan T
-	messages       chan T
-	timeout        time.Duration
+	clients              map[Client[T]]void
+	stop                 chan void
+	subscribingClients   chan Client[T]
+	unsubscribingClients chan Client[T]
+	messages             chan T
+	timeout              time.Duration
 }
 
 // Builder encapsulates the construction of a new broker.
@@ -30,46 +31,51 @@ type Builder[T any] struct {
 	bufferSize int
 }
 
-// defaultTimeout specifies the default timeout when the broker tries to send a message to a client.
+// defaultTimeout specifies the default timeout when the broker tries to send a message to a client,
+// a message is published to the broker, or a client subscribes or unsubscribes.
 const defaultTimeout = time.Second
 
 // defaultBufferSize specifies the default size of the message buffer.
 const defaultBufferSize int = 10
 
-// ErrClosed is the error returned when the broker is already closed.
-var ErrClosed = errors.New("broker already closed")
-
-// Messages returns a read-only channel used to receive incoming messages.
-func (client Client[T]) Messages() <-chan T {
-	return client.ch
-}
-
-// Publish publishes a new message to the broker.
-// Returns ErrClosed if the broker is already closed.
+// Publish publishes a message to the broker.
+// Returns ErrTimeout on timeout.
 func (broker *Broker[T]) Publish(message T) error {
-	return safeSend(broker.messages, message)
+	select {
+	case broker.messages <- message:
+		return nil
+	case <-time.After(broker.timeout):
+		return ErrTimeout
+	}
 }
 
 // Subscribe registers a new client to the broker and returns it to the caller.
-// Returns ErrClosed if the broker is already closed.
+// Returns ErrTimeout on timeout.
 func (broker *Broker[T]) Subscribe() (Client[T], error) {
-	ch := make(chan T)
-	if err := safeSend(broker.newClients, ch); err != nil {
-		return Client[T]{}, err
+	client := make(Client[T])
+	select {
+	case broker.subscribingClients <- client:
+		return client, nil
+	case <-time.After(broker.timeout):
+		return nil, ErrTimeout
 	}
-	return Client[T]{ch}, nil
 }
 
 // Unsubscribe removes a client from the broker.
-// Returns ErrClosed if the broker is already closed.
+// Returns ErrTimeout on timeout.
 func (broker *Broker[T]) Unsubscribe(client Client[T]) error {
-	return safeSend(broker.removedClients, client.ch)
+	select {
+	case broker.unsubscribingClients <- client:
+		return nil
+	case <-time.After(broker.timeout):
+		return ErrTimeout
+	}
 }
 
 // Close stops the broker and removes all leftover clients from it.
-// Returns ErrClosed if the broker is already closed.
-func (broker *Broker[T]) Close() error {
-	return safeSend(broker.stop, void{})
+// Panics when broker is already stopped.
+func (broker *Broker[T]) Close() {
+	close(broker.stop)
 }
 
 // run starts the broker loop.
@@ -77,21 +83,15 @@ func (broker *Broker[T]) run() {
 	for {
 		select {
 		case <-broker.stop:
-			// close all channels
-			close(broker.stop)
-			close(broker.newClients)
-			close(broker.removedClients)
-			close(broker.messages)
-			// close all leftover clients
+			// close all leftover clients and break the broker loop
 			for client := range broker.clients {
 				close(client)
 			}
-			// break the broker loop
 			return
-		case client := <-broker.newClients:
+		case client := <-broker.subscribingClients:
 			// add new client
 			broker.clients[client] = void{}
-		case client := <-broker.removedClients:
+		case client := <-broker.unsubscribingClients:
 			// remove and close client
 			delete(broker.clients, client)
 			close(client)
@@ -135,24 +135,13 @@ func (builder Builder[T]) BufferSize(bufferSize int) Builder[T] {
 // Build builds a new broker using the configuration of the builder.
 func (builder Builder[T]) Build() *Broker[T] {
 	broker := &Broker[T]{
-		clients:        make(map[chan T]void),
-		stop:           make(chan void),
-		newClients:     make(chan chan T),
-		removedClients: make(chan chan T),
-		messages:       make(chan T, builder.bufferSize),
-		timeout:        builder.timeout,
+		clients:              make(map[Client[T]]void),
+		stop:                 make(chan void),
+		subscribingClients:   make(chan Client[T]),
+		unsubscribingClients: make(chan Client[T]),
+		messages:             make(chan T, builder.bufferSize),
+		timeout:              builder.timeout,
 	}
 	go broker.run()
 	return broker
-}
-
-// safeSend sends to a channel without panicking. Returns ErrClosed if the channel is already closed.
-func safeSend[T any](ch chan T, msg T) (err error) {
-	defer func() {
-		if recover() != nil {
-			err = ErrClosed
-		}
-	}()
-	ch <- msg
-	return nil
 }

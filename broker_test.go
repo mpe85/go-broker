@@ -20,7 +20,7 @@ func TestNew(t *testing.T) {
 	assertions.Equal(defaultTimeout, broker.timeout)
 	assertions.Equal(defaultBufferSize, cap(broker.messages))
 
-	assertions.Nil(broker.Close())
+	t.Cleanup(broker.Close)
 }
 
 func TestNewBuilderDefault(t *testing.T) {
@@ -31,7 +31,7 @@ func TestNewBuilderDefault(t *testing.T) {
 	assertions.Equal(defaultTimeout, broker.timeout)
 	assertions.Equal(defaultBufferSize, cap(broker.messages))
 
-	assertions.Nil(broker.Close())
+	t.Cleanup(broker.Close)
 }
 
 func TestNewBuilderTimeout(t *testing.T) {
@@ -43,7 +43,7 @@ func TestNewBuilderTimeout(t *testing.T) {
 	assertions.Equal(timeout, broker.timeout)
 	assertions.Equal(defaultBufferSize, cap(broker.messages))
 
-	assertions.Nil(broker.Close())
+	t.Cleanup(broker.Close)
 }
 
 func TestNewBuilderBufferSize(t *testing.T) {
@@ -55,44 +55,44 @@ func TestNewBuilderBufferSize(t *testing.T) {
 	assertions.Equal(defaultTimeout, broker.timeout)
 	assertions.Equal(bufferSize, cap(broker.messages))
 
-	assertions.Nil(broker.Close())
+	t.Cleanup(broker.Close)
 }
 
 func TestSubscribe(t *testing.T) {
 	assertions := assert.New(t)
 
 	answer := 42
-	broker := New[int]()
+	broker := NewBuilder[int]().Timeout(100 * time.Millisecond).Build()
 	assertions.NotNil(broker)
 
 	client, err := broker.Subscribe()
-	assertions.NotNil(client.Messages())
+	assertions.NotNil(client)
 	assertions.Nil(err)
 
 	go func() {
 		assertions.Nil(broker.Publish(answer))
 	}()
 
-	msg, ok := <-client.Messages()
+	msg, ok := <-client
 	assertions.Equal(answer, msg)
 	assertions.True(ok)
 
-	assertions.Nil(broker.Close())
+	broker.Close()
 
 	client, err = broker.Subscribe()
-	assertions.Nil(client.Messages())
-	assertions.ErrorIs(err, ErrClosed)
+	assertions.Nil(client)
+	assertions.ErrorIs(err, ErrTimeout)
 }
 
 func TestUnsubscribe(t *testing.T) {
 	assertions := assert.New(t)
 
 	answer := 42
-	broker := New[int]()
+	broker := NewBuilder[int]().Timeout(100 * time.Millisecond).Build()
 	assertions.NotNil(broker)
 
 	client, err := broker.Subscribe()
-	assertions.NotNil(client.Messages())
+	assertions.NotNil(client)
 	assertions.Nil(err)
 
 	assertions.Nil(broker.Unsubscribe(client))
@@ -101,42 +101,43 @@ func TestUnsubscribe(t *testing.T) {
 		assertions.Nil(broker.Publish(answer))
 	}()
 
-	msg, ok := <-client.Messages()
+	msg, ok := <-client
 	assertions.Equal(0, msg)
 	assertions.False(ok)
 
 	client, err = broker.Subscribe()
-	assertions.NotNil(client.Messages())
+	assertions.NotNil(client)
 	assertions.Nil(err)
 
-	assertions.Nil(broker.Close())
+	broker.Close()
 
-	assertions.ErrorIs(broker.Unsubscribe(client), ErrClosed)
+	time.Sleep(100 * time.Millisecond)
+	assertions.ErrorIs(broker.Unsubscribe(client), ErrTimeout)
 }
 
 func TestClose(t *testing.T) {
 	assertions := assert.New(t)
 
 	answer := 42
-	broker := New[int]()
+	broker := NewBuilder[int]().Timeout(100 * time.Millisecond).BufferSize(0).Build()
 	assertions.NotNil(broker)
 
 	client, err := broker.Subscribe()
-	assertions.NotNil(client.Messages())
+	assertions.NotNil(client)
 	assertions.Nil(err)
 
-	assertions.Nil(broker.Close())
-	assertions.ErrorIs(broker.Close(), ErrClosed)
+	broker.Close()
+	assertions.Panics(broker.Close)
 
-	assertions.ErrorIs(broker.Publish(answer), ErrClosed)
+	assertions.ErrorIs(broker.Publish(answer), ErrTimeout)
 
-	msg, ok := <-client.Messages()
+	msg, ok := <-client
 	assertions.Equal(0, msg)
 	assertions.False(ok)
 
 	client, err = broker.Subscribe()
-	assertions.Nil(client.Messages())
-	assertions.ErrorIs(err, ErrClosed)
+	assertions.Nil(client)
+	assertions.ErrorIs(err, ErrTimeout)
 }
 
 func TestPublishTimeout(t *testing.T) {
@@ -157,12 +158,12 @@ func TestPublishTimeout(t *testing.T) {
 	time.Sleep(200 * time.Millisecond)
 
 	select {
-	case <-client.Messages():
+	case <-client:
 		assertions.Fail("Received message not expected")
 	case <-time.After(time.Second):
 	}
 
-	assertions.Nil(broker.Close())
+	broker.Close()
 }
 
 func BenchmarkNew(b *testing.B) {
@@ -171,7 +172,7 @@ func BenchmarkNew(b *testing.B) {
 		broker := New[int]()
 		assertions.NotNil(broker)
 		b.Cleanup(func() {
-			_ = broker.Close()
+			broker.Close()
 		})
 	}
 }
@@ -184,7 +185,7 @@ func BenchmarkPublish(b *testing.B) {
 		assertions.Nil(broker.Publish(i))
 	}
 	b.Cleanup(func() {
-		_ = broker.Close()
+		broker.Close()
 	})
 }
 
@@ -197,6 +198,6 @@ func BenchmarkSubscribe(b *testing.B) {
 		assertions.Nil(err)
 	}
 	b.Cleanup(func() {
-		_ = broker.Close()
+		broker.Close()
 	})
 }

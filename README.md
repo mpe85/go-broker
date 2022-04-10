@@ -48,24 +48,24 @@ err := theBroker.Publish("Hello")
 
 Receive a single message from the broker:
 ```go
-message := <-client.Messages()
+message := <-client
 ```
 
 Receive a single message from the broker, with check if client is closed:
 ```go
-message, ok := <-client.Messages()
+message, ok := <-client
 ```
 
 Iterate over all messages from the broker, until client is closed:
 ```go
-for message := range client.Messages() {
+for message := range client {
 	// process message
 }
 ```
 
 Shutdown the broker, and close all clients that are still subscribed:
 ```go
-err := theBroker.Close()
+theBroker.Close()
 ```
 
 ## Example
@@ -86,9 +86,7 @@ func main() {
 		BufferSize(50).
 		Build()
 
-	defer func() {
-		_ = theBroker.Close()
-    }()
+	defer theBroker.Close()
 
 	client1, _ := theBroker.Subscribe()
 	client2, _ := theBroker.Subscribe()
@@ -97,7 +95,7 @@ func main() {
 		_ = theBroker.Publish(42)
     }()
 	
-	fmt.Println(<-client1.Messages())
-	fmt.Println(<-client2.Messages())
+	fmt.Println(<-client1)
+	fmt.Println(<-client2)
 }
 ```
