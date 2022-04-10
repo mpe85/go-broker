@@ -111,7 +111,7 @@ func TestUnsubscribe(t *testing.T) {
 
 	broker.Close()
 
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(time.Second)
 	assertions.ErrorIs(broker.Unsubscribe(client), ErrTimeout)
 }
 
@@ -128,6 +128,8 @@ func TestClose(t *testing.T) {
 
 	broker.Close()
 	assertions.Panics(broker.Close)
+
+	time.Sleep(time.Second)
 
 	assertions.ErrorIs(broker.Publish(answer), ErrTimeout)
 
