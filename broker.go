@@ -1,4 +1,4 @@
-// Package broker provides a simple generic message broker implementation for Go 1.18+.
+// Package broker provides a simple generic thread-safe message broker implementation for Go 1.18+.
 package broker
 
 import (
