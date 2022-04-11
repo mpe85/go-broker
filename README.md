@@ -8,7 +8,7 @@
 [![License](https://img.shields.io/github/license/mpe85/grampa.svg?label=License)](https://github.com/mpe85/go-broker/blob/master/LICENSE)
 [![PkgGoDev](https://pkg.go.dev/badge/mod/github.com/mpe85/go-broker)](https://pkg.go.dev/mod/github.com/mpe85/go-broker)
 
-A generic thread-safe broker for Go 1.18+.
+A generic thread-safe message broker for Go 1.18+.
 
 ## Installation
 

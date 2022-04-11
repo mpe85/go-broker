@@ -9,9 +9,6 @@ import (
 // Client defines a client that is registered to the broker and receives messages from it.
 type Client[T any] chan T
 
-// ErrTimeout is the error returned when a broker operation timed out.
-var ErrTimeout = errors.New("timeout")
-
 // void represents an empty struct that consumes no memory.
 type void struct{}
 
@@ -37,6 +34,9 @@ const defaultTimeout = time.Second
 
 // defaultBufferSize specifies the default size of the message buffer.
 const defaultBufferSize int = 10
+
+// ErrTimeout is the error returned when a broker operation timed out.
+var ErrTimeout = errors.New("timeout")
 
 // Publish publishes a message to the broker.
 // Returns ErrTimeout on timeout.
@@ -73,7 +73,7 @@ func (broker *Broker[T]) Unsubscribe(client Client[T]) error {
 }
 
 // Close stops the broker and removes all leftover clients from it.
-// Panics when broker is already stopped.
+// Panics when the broker is already stopped.
 func (broker *Broker[T]) Close() {
 	close(broker.stop)
 }
@@ -114,8 +114,8 @@ func NewBuilder[T any]() Builder[T] {
 }
 
 // New constructs a new broker with default configuration:
-// - timeout = 1 * time.Second
-// - bufferSize = 10
+//   • timeout = 1 * time.Second
+//   • bufferSize = 10
 func New[T any]() *Broker[T] {
 	return NewBuilder[T]().Build()
 }
