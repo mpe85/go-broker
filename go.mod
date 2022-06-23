@@ -3,7 +3,7 @@ module github.com/mpe85/go-broker
 go 1.18
 
 require (
-	github.com/stretchr/testify v1.7.2
+	github.com/stretchr/testify v1.7.4
 	go.uber.org/goleak v1.1.12
 )
 
