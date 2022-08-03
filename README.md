@@ -13,7 +13,7 @@
 This library provides a broker implementation that handles publishing of messages in a thread-safe manner.
 It supports multiple concurrent publishers as well as multiple clients subscribing to the broker.
 All operations on the broker (like publish, subscribe, unsubscribe) are synchronized,
-but may time out if the broker loop is too busy.
+but may time out if the internal broker loop is too busy.
 The size of the internal buffer that buffers published messages is configurable, as well as the timeout duration.
 
 ## Installation
