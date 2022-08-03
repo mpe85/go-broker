@@ -1,5 +1,7 @@
 # go-broker
 
+*A generic thread-safe message broker for Go 1.18+.*
+
 [![Latest Release](https://img.shields.io/github/release/mpe85/go-broker/all.svg?label=Latest%20Release)](https://github.com/mpe85/go-broker/releases/latest)
 [![Go](https://img.shields.io/github/go-mod/go-version/mpe85/go-broker)](https://go.dev/)
 [![Go Report Card](https://goreportcard.com/badge/github.com/mpe85/go-broker?style=flat-square)](https://goreportcard.com/report/github.com/mpe85/go-broker)
@@ -8,7 +10,11 @@
 [![License](https://img.shields.io/github/license/mpe85/grampa.svg?label=License)](https://github.com/mpe85/go-broker/blob/master/LICENSE)
 [![PkgGoDev](https://pkg.go.dev/badge/mod/github.com/mpe85/go-broker)](https://pkg.go.dev/mod/github.com/mpe85/go-broker)
 
-A generic thread-safe message broker for Go 1.18+.
+This library provides a broker implementation that handles publishing of messages in a thread-safe manner.
+It supports multiple concurrent publishers as well as multiple clients subscribing to the broker.
+All operations on the broker (like publish, subscribe, unsubscribe) are synchronized,
+but may time out if the broker loop is too busy.
+The size of the internal buffer that buffers published messages is configurable, as well as the timeout duration.
 
 ## Installation
 
