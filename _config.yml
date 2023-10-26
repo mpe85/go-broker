@@ -1,4 +1,4 @@
 title: go-broker
-description: A generic broker for Go 1.18+
+description: A generic thread-safe message broker for Go
 show_downloads: true
 theme: jekyll-theme-slate
