@@ -1,6 +1,6 @@
 # go-broker
 
-*A generic thread-safe message broker for Go 1.18+.*
+*A generic thread-safe message broker for Go*
 
 [![Latest Release](https://img.shields.io/github/release/mpe85/go-broker/all.svg?label=Latest%20Release)](https://github.com/mpe85/go-broker/releases/latest)
 [![Go](https://img.shields.io/github/go-mod/go-version/mpe85/go-broker)](https://go.dev/)
