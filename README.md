@@ -6,8 +6,8 @@
 [![Go](https://img.shields.io/github/go-mod/go-version/mpe85/go-broker)](https://go.dev/)
 [![Go Report Card](https://goreportcard.com/badge/github.com/mpe85/go-broker?style=flat-square)](https://goreportcard.com/report/github.com/mpe85/go-broker)
 [![Build](https://github.com/mpe85/go-broker/actions/workflows/test.yml/badge.svg)](https://github.com/mpe85/go-broker/actions/workflows/test.yml)
-[![codecov](https://codecov.io/gh/mpe85/go-broker/branch/master/graph/badge.svg?token=rWTO2Fk2jc)](https://codecov.io/gh/mpe85/go-broker)
-[![License](https://img.shields.io/github/license/mpe85/grampa.svg?label=License)](https://github.com/mpe85/go-broker/blob/master/LICENSE)
+[![codecov](https://codecov.io/gh/mpe85/go-broker/branch/main/graph/badge.svg?token=rWTO2Fk2jc)](https://codecov.io/gh/mpe85/go-broker)
+[![License](https://img.shields.io/github/license/mpe85/grampa.svg?label=License)](https://github.com/mpe85/go-broker/blob/main/LICENSE)
 [![PkgGoDev](https://pkg.go.dev/badge/mod/github.com/mpe85/go-broker)](https://pkg.go.dev/mod/github.com/mpe85/go-broker)
 
 This library provides a broker implementation that handles publishing of messages in a thread-safe manner.
